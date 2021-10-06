@@ -1,0 +1,69 @@
+version: "2.1"
+
+services:
+  coeus-backend:
+    container_name: coeus-backend
+    build:
+      context: ../coeus-api
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5000"
+    # environment:
+    #   - APP_SETTINGS=project.config.DevelopmentConfig
+    #   - DATABASE_URL=postgres://postgres:postgres@users-db:5432/users_dev
+    #   - DATABASE_TEST_URL=postgres://postgres:postgres@users-db:5432/users_test
+    #   - SECRET_KEY=my_precious
+    depends_on:
+      - summarizer-model-api
+    links:
+      - summarizer-model-api
+    
+  summarizer-model-api:
+    container_name: summarizer-model-api
+    build:
+      context: ../summarizer-model-api
+      dockerfile: Dockerfile
+    ports:
+      - "5002:5000"
+    # environment:
+    #   - APP_SETTINGS=project.config.DevelopmentConfig
+    #   - DATABASE_URL=postgres://postgres:postgres@users-db:5432/users_dev
+    #   - DATABASE_TEST_URL=postgres://postgres:postgres@users-db:5432/users_test
+    #   - SECRET_KEY=my_precious
+
+  nginx:
+    container_name: nginx
+    build: ./nginx/
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    # volumns:
+    #   - "/etc/ssl/certs:/etc/ssl/certs"
+    #   - "/etc/ssl/private/:/etc/ssl/private/"
+    depends_on:
+      - learn-docker-react
+    links:
+      - learn-docker-react
+
+  learn-docker-react:
+    container_name: learn-docker-react
+    build:
+      context: ../learn-docker-react
+      dockerfile: Dockerfile
+    volumes:
+      - "../learn-docker-react:/usr/src/app"
+      - "/usr/src/app/node_modules"
+    ports:
+      - "9000:80" # expose ports - HOST:CONTAINER
+    # environment:
+    #   - NODE_ENV=development
+    #   - REACT_APP_USERS_SERVICE_URL=${REACT_APP_USERS_SERVICE_URL}
+    #   - REACT_APP_EVAL_SERVICE_URL=${REACT_APP_EVAL_SERVICE_URL}
+    #   - REACT_APP_API_GATEWAY_URL=${REACT_APP_API_GATEWAY_URL}
+    depends_on:
+      - coeus-backend
+    links:
+      - coeus-backend
+
+  
